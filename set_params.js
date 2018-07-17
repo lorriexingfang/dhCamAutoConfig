@@ -3,20 +3,21 @@ var request = require("request"),
 
 var username = 'admin',
     password = 'abc123';
-//var digest_request = require('http-digest-client');
 
 function firstRequest(callback){
-    var options_1st = { method: 'GET',
+    var options = { 
+      method: 'GET',
       url: 'http://192.168.0.3/cgi-bin/configManager.cgi',
-      qs: 
-       { action: 'setConfig',
-         'VideoColor[0][0].Brightness': '60',
-         'VideoColor[0][0].Contrast': '50',
-         'VideoColor[0][0].Saturation': '60',
-         'VideoColor[0][0].Gamma': '55' },
-      };
+      qs: { 
+          action: 'setConfig',
+          'VideoColor[0][0].Brightness': '60',
+          'VideoColor[0][0].Contrast': '50',
+          'VideoColor[0][0].Saturation': '60',
+          'VideoColor[0][0].Gamma': '55' 
+       },
+    };
 
-    request(options_1st, function (error, response, body) {
+    request(options, function (error, response, body) {
       if (error) {            
         return callback(null, error);;
       }
@@ -31,11 +32,14 @@ function firstRequest(callback){
 }
 
 
-firstRequest(function(data){
+firstRequest(function(data, error){
+    if (error) throw new Error(error);
 
     data = data.replace("\"", "");
     data = data.replace("\"", "");
-    console.log("data is: ", data)
+    console.log("data is: ", data);
+
+    /*Get response based on first http request*/
     var ha1 = crypto.createHash('md5').update(username + ':' + 'Login to 3L08942PAA8AECE' + ':' + password).digest('hex');
     var ha2 = crypto.createHash('md5').update('GET:' + '/cgi-bin/configManager.cgi?action=setConfig&VideoColor[0][0].Brightness=60&VideoColor[0][0].Contrast=50&VideoColor[0][0].Saturation=60&VideoColor[0][0].Gamma=55').digest('hex');
     var response = crypto.createHash('md5').update(ha1 + ':' + data + ':00000001:0a4f113b:auth:' + ha2).digest('hex');
@@ -44,7 +48,7 @@ firstRequest(function(data){
 
     console.log("auth string is: ", auth_string);
 
-    var options_2nd = { method: 'GET',
+    var options = { method: 'GET',
       url: 'http://192.168.0.3/cgi-bin/configManager.cgi',
       qs: 
        { action: 'setConfig',
@@ -63,9 +67,7 @@ firstRequest(function(data){
        } 
     };
 
-    request(options_2nd, function (error, response, body) {
+    request(options, function (error, response, body) {
       if (error) throw new Error(error);
-
-      //console.log("2nd request response is: ", response);
     });  
 });

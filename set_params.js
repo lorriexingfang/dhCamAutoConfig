@@ -10,17 +10,30 @@ var username = 'admin',
     nc = '00000001',
     cnonce = '0a4f113b';
 
+var paramDist = {};
+
+
+function resolveUri() {
+    var reuri = uri,
+    reuri = reuri.replace('/cgi-bin/configManager.cgi?','');
+
+    console.log('uri is :',reuri);
+    var parameters = reuri.split('&');
+    console.log("parameters is: ", parameters);
+
+    parameters.forEach(function(element) {
+        console.log("element is: para name  " + element.split("=")[0] + " and para val is: " + element.split("=")[1]);
+        element.split("=")[0] = element.split("=")[0].replace('/cgi-bin/configManager.cgi?','');
+        paramDist[element.split("=")[0]] = element.split("=")[1];
+    });
+
+    console.log("the parameters dict is: ", paramDist);
+}
+
 function firstRequest(callback){
     var options = { 
       method: 'GET',
       url: 'http://192.168.0.3/cgi-bin/configManager.cgi',
-      qs: { 
-          action: 'setConfig',
-          'VideoColor[0][0].Brightness': '60',
-          'VideoColor[0][0].Contrast': '50',
-          'VideoColor[0][0].Saturation': '60',
-          'VideoColor[0][0].Gamma': '55' 
-       },
     };
 
     request(options, function (error, response, body) {
@@ -37,7 +50,7 @@ function firstRequest(callback){
     });
 }
 
-
+/*main function starts here*/
 firstRequest(function(data, error){
     if (error) throw new Error(error);
 
@@ -45,7 +58,7 @@ firstRequest(function(data, error){
     data = data.replace("\"", "");
     console.log("data is: ", data);
 
-    /*Get response based on first http request*/
+    /*Generate response based on first http request (Digest Auth Method)*/
     var ha1 = crypto.createHash('md5').update(username + ':' + realm + ':' + password).digest('hex');
     var ha2 = crypto.createHash('md5').update(http_method + ':' + uri).digest('hex');
     var response = crypto.createHash('md5').update(ha1 + ':' +
@@ -59,14 +72,11 @@ firstRequest(function(data, error){
 
     console.log("auth string is: ", auth_string);
 
+    resolveUri();
+
     var options = { method: 'GET',
       url: 'http://192.168.0.3/cgi-bin/configManager.cgi',
-      qs: 
-       { action: 'setConfig',
-         'VideoColor[0][0].Brightness': '60',
-         'VideoColor[0][0].Contrast': '50',
-         'VideoColor[0][0].Saturation': '60',
-         'VideoColor[0][0].Gamma': '55' },
+      qs: paramDist,
       headers: 
        {  
           'Connection': 'keep-alive',
@@ -81,6 +91,6 @@ firstRequest(function(data, error){
     request(options, function (error, response, body) {
       if (error) throw new Error(error);
 
-      //console.log(" 2nd response is: ", response);
+      console.log(" 2nd response is: ", response);
     });  
 });

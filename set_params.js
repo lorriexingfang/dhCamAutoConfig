@@ -2,28 +2,34 @@ var request = require("request"),
     crypto = require('crypto');
 
 var username = 'admin',
-    password = 'abc123',
+    password = 'abc12345',
     realm = 'Login to 3L08942PAA8AECE',
     http_method = 'GET',
-    uri = '/cgi-bin/configManager.cgi?action=setConfig&VideoColor[0][0].Brightness=60&VideoColor[0][0].Contrast=50&VideoColor[0][0].Saturation=60&VideoColor[0][0].Gamma=55',
+    full_uri = '/cgi-bin/configManager.cgi?action=setConfig&VideoColor[0][0].Brightness=60&VideoColor[0][0].Contrast=50&VideoColor[0][0].Saturation=60&VideoColor[0][0].Gamma=55',
     qop = 'auth',
     nc = '00000001',
+    algorithm = 'MD5',
+    opaque = '3fd83f11d2cf03b2cef8e4555820db51cf4d3935',
+    ip = '192.168.0.3',
     cnonce = '0a4f113b';
+
+var do_uri = full_uri,
+do_uri = do_uri.substring(0,do_uri.indexOf("?"));
+console.log("do_uri is :",do_uri);
 
 var paramDist = {};
 
 
 function resolveUri() {
-    var reuri = uri,
-    reuri = reuri.replace('/cgi-bin/configManager.cgi?','');
+    var act_uri = full_uri,
+    act_uri = act_uri.substring(act_uri.indexOf("?")+1);
 
-    console.log('uri is :',reuri);
-    var parameters = reuri.split('&');
+    console.log('act_uri is :',act_uri);
+    var parameters = act_uri.split('&');
     console.log("parameters is: ", parameters);
 
     parameters.forEach(function(element) {
         console.log("element is: para name  " + element.split("=")[0] + " and para val is: " + element.split("=")[1]);
-        element.split("=")[0] = element.split("=")[0].replace('/cgi-bin/configManager.cgi?','');
         paramDist[element.split("=")[0]] = element.split("=")[1];
     });
 
@@ -33,7 +39,7 @@ function resolveUri() {
 function firstRequest(callback){
     var options = { 
       method: 'GET',
-      url: 'http://192.168.0.3/cgi-bin/configManager.cgi',
+      url: 'http://' + ip + do_uri,
     };
 
     request(options, function (error, response, body) {
@@ -60,7 +66,7 @@ firstRequest(function(data, error){
 
     /*Generate response based on first http request (Digest Auth Method)*/
     var ha1 = crypto.createHash('md5').update(username + ':' + realm + ':' + password).digest('hex');
-    var ha2 = crypto.createHash('md5').update(http_method + ':' + uri).digest('hex');
+    var ha2 = crypto.createHash('md5').update(http_method + ':' + full_uri).digest('hex');
     var response = crypto.createHash('md5').update(ha1 + ':' +
                                                    data + ':' + 
                                                    nc + ':' + 
@@ -68,14 +74,14 @@ firstRequest(function(data, error){
                                                    qop + ':' + 
                                                    ha2).digest('hex');
 
-    var auth_string = 'Digest username="admin", realm="Login to 3L08942PAA8AECE", nonce="' + data + '", uri="/cgi-bin/configManager.cgi?action=setConfig&VideoColor[0][0].Brightness=60&VideoColor[0][0].Contrast=50&VideoColor[0][0].Saturation=60&VideoColor[0][0].Gamma=55", algorithm="MD5", qop=auth, nc=00000001, cnonce="0a4f113b", opaque="3fd83f11d2cf03b2cef8e4555820db51cf4d3935", response="' + response + '"';
+    var auth_string = 'Digest username="' + username + '", realm="'+ realm + '", nonce="' + data + '", uri="' + full_uri + '", algorithm="'+ algorithm + '", qop="' + qop + '", nc=' + nc + ', cnonce="'+ cnonce + '", opaque="' + opaque + '", response="' + response + '"';
 
     console.log("auth string is: ", auth_string);
 
     resolveUri();
 
     var options = { method: 'GET',
-      url: 'http://192.168.0.3/cgi-bin/configManager.cgi',
+      url: 'http://' + ip + do_uri,
       qs: paramDist,
       headers: 
        {  
@@ -91,6 +97,6 @@ firstRequest(function(data, error){
     request(options, function (error, response, body) {
       if (error) throw new Error(error);
 
-      console.log(" 2nd response is: ", response);
+      // console.log(" 2nd response is: ", response);
     });  
 });

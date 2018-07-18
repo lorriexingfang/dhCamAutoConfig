@@ -13,16 +13,16 @@ var username = 'admin',
     ip = '192.168.0.3',
     cnonce = '0a4f113b';
 
-var do_uri = full_uri,
-do_uri = do_uri.substring(0,do_uri.indexOf("?"));
+//var do_uri = full_uri,
+var do_uri = full_uri.substring(0,full_uri.indexOf("?"));
 console.log("do_uri is :",do_uri);
 
 var paramDist = {};
 
 
 function resolveUri() {
-    var act_uri = full_uri,
-    act_uri = act_uri.substring(act_uri.indexOf("?")+1);
+    // var act_uri = full_uri,
+    var act_uri = full_uri.substring(full_uri.indexOf("?")+1);
 
     console.log('act_uri is :',act_uri);
     var parameters = act_uri.split('&');

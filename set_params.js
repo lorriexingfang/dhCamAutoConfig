@@ -4,19 +4,35 @@ module.exports = dahuaOps;
 var request = require("request"),
     crypto = require('crypto');
 
-var username = 'admin',
-    password = 'abc12345',
+
+var 
     realm = 'Login to 3L08942PAA8AECE',
     http_method = 'GET',
+    username = 'admin',
+    password = 'abc12345',
     full_uri = '/cgi-bin/configManager.cgi?action=setConfig&VideoColor[0][0].Brightness=60&VideoColor[0][0].Contrast=50&VideoColor[0][0].Saturation=60&VideoColor[0][0].Gamma=55',
+    ip = '192.168.1.108',
     qop = 'auth',
     nc = '00000001',
     algorithm = 'MD5',
     opaque = '3fd83f11d2cf03b2cef8e4555820db51cf4d3935',
-    ip = '192.168.1.108',
     cnonce = '0a4f113b';
 
+setting = function() {
+   username = options.username;
+   password = options.password;
+   full_uri = options.full_uri;
+   ip = options.ip;
+   console.log("full is : ",username)
+   console.log("full is : ",password)
+   console.log("full is : ",full_uri)
+   console.log("ip is : ",ip)
+
+}; 
+
 //var do_uri = full_uri,
+
+
 var do_uri = full_uri.substring(0,full_uri.indexOf("?"));
 console.log("do_uri is :",do_uri);
 
@@ -24,6 +40,7 @@ var paramDist = {};
 
 
 function resolveUri() {
+
     // var act_uri = full_uri,
     var act_uri = full_uri.substring(full_uri.indexOf("?")+1);
 

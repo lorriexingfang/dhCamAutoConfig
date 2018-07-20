@@ -1,5 +1,11 @@
 {
-  "dependencies": {
-    "request": "^2.87.0"
+  "name": "setupDahuaCamera",
+  "version": "0.0.1",
+  "scripts":{
+  	"start":"node app.js"
+  },
+  "author":"Xing Fang",
+  "dependencies":{
+  	 "request": "^2.87.0"
   }
 }

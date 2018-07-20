@@ -7,21 +7,18 @@ var request = require("request"),
 
 var realm = 'Login to 3L08942PAA8AECE',
     http_method = 'GET',
-    full_uri = '/cgi-bin/configManager.cgi?action=setConfig&VideoColor[0][0].Brightness=60&VideoColor[0][0].Contrast=50&VideoColor[0][0].Saturation=60&VideoColor[0][0].Gamma=55',
-    //ip = '192.168.1.108',
     qop = 'auth',
     nc = '00000001',
     algorithm = 'MD5',
     opaque = '3fd83f11d2cf03b2cef8e4555820db51cf4d3935',
     cnonce = '0a4f113b';
 
-var do_uri = full_uri.substring(0,full_uri.indexOf("?"));
+
 var paramDist = {};
 
-function resolveUri() {
-    // var act_uri = full_uri,
-    var act_uri = full_uri.substring(full_uri.indexOf("?")+1);
+function resolveUri(frui) {
 
+    var act_uri = frui.substring(frui.indexOf("?")+1);
     console.log('act_uri is :',act_uri);
     var parameters = act_uri.split('&');
     console.log("parameters is: ", parameters);
@@ -32,9 +29,13 @@ function resolveUri() {
     });
 
     console.log("the parameters dict is: ", paramDist);
+    return paramDist;
 }
 
 dahuaOps.firstRequest = function(callback){
+
+    do_uri = this.full_uri.substring(0,this.full_uri.indexOf("?"));
+
     var options = { 
       method: 'GET',
       url: 'http://' + this.ip + do_uri,
@@ -54,12 +55,15 @@ dahuaOps.firstRequest = function(callback){
     });
 }
 
-dahuaOps.init = function(username, password, ip) {
+dahuaOps.init = function(username, password, ip, full_uri) {
     this.username = username;
     console.log("full is : ",this.username);
     this.password = password;
     console.log("full is : ",this.password);
     this.ip = ip;
+    console.log("full is :",this.ip);
+    this.full_uri = full_uri;
+    console.log("full is :",this.full_uri);
 }; 
 
 /*main function starts here*/
@@ -71,10 +75,10 @@ dahuaOps.setParams = function() {
       data = data.replace("\"", "");
       data = data.replace("\"", "");
       console.log("data is: ", data);
-
+      console.log("-----81 uri:",that.full_uri);
       /*Generate response based on first http request (Digest Auth Method)*/
       var ha1 = crypto.createHash('md5').update(that.username + ':' + realm + ':' + that.password).digest('hex');
-      var ha2 = crypto.createHash('md5').update(http_method + ':' + full_uri).digest('hex');
+      var ha2 = crypto.createHash('md5').update(http_method + ':' + that.full_uri).digest('hex');
       var response = crypto.createHash('md5').update(ha1 + ':' +
                                                      data + ':' + 
                                                      nc + ':' + 
@@ -86,7 +90,7 @@ dahuaOps.setParams = function() {
                         + that.username 
                         + '", realm="'+ realm 
                         + '", nonce="' + data 
-                        + '", uri="' + full_uri 
+                        + '", uri="' + that.full_uri 
                         + '", algorithm="'+ algorithm 
                         + '", qop="' + qop
                         + '", nc=' + nc 
@@ -97,8 +101,8 @@ dahuaOps.setParams = function() {
                         + '"';
 
       console.log("auth string is: ", auth_string);
-
-      resolveUri();
+      var frui = that.full_uri;
+      resolveUri(frui);
 
       var options = { method: 'GET',
         url: 'http://' + that.ip + do_uri,
